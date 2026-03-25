@@ -12,8 +12,19 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true
+        required: function () { return !this.isGoogleUser; }
     },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
+    isGoogleUser: {
+        type: Boolean,
+        default: false
+    },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
     role: {
         type: String,
         enum: ['admin', 'personnel', 'resident'],

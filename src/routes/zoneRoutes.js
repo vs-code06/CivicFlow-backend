@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getZones, getMyZone, getZoneById, createZone, updateZone, addAreaToZone } = require('../controllers/zoneController');
+const { getZones, getMyZone, getZoneById, createZone, updateZone, addAreaToZone, updateZoneSchedule, getZoneScheduleStatus } = require('../controllers/zoneController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 // All zone routes are protected
@@ -16,6 +16,10 @@ router.route('/')
 router.route('/:id')
     .get(getZoneById)                            // All authenticated users
     .put(authorize('admin'), updateZone);         // Admin only
+
+// Schedule management
+router.put('/:id/schedule', authorize('admin'), updateZoneSchedule);
+router.get('/:id/schedule-status', getZoneScheduleStatus);
 
 router.post('/:id/areas', authorize('admin'), addAreaToZone);
 

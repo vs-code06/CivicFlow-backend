@@ -137,4 +137,115 @@ const addAreaToZone = async (req, res) => {
     }
 };
 
-module.exports = { getZones, getMyZone, getZoneById, createZone, updateZone, addAreaToZone };
+// ─── PUT /api/zones/:id/schedule ──────────────────────────────────────────────
+// Admin only: set the weekly collection schedule for a zone
+const updateZoneSchedule = async (req, res) => {
+    try {
+        const { schedule } = req.body; // Array of { day, types, startTime, endTime }
+        if (!schedule || !Array.isArray(schedule)) {
+            return res.status(400).json({ success: false, message: 'Schedule array is required' });
+        }
+
+        const zone = await Zone.findById(req.params.id);
+        if (!zone) return res.status(404).json({ success: false, message: 'Zone not found' });
+
+        zone.schedule = schedule;
+        await zone.save();
+
+        const result = await withMetrics(zone);
+        return res.json({ success: true, zone: result });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// ─── GET /api/zones/:id/schedule-status ───────────────────────────────────────
+// Any authenticated: get today's real collection status for a zone
+const getZoneScheduleStatus = async (req, res) => {
+    try {
+        const zone = await Zone.findById(req.params.id);
+        if (!zone) return res.status(404).json({ success: false, message: 'Zone not found' });
+
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const today = new Date();
+        const todayName = days[today.getDay()];
+
+        const scheduleEntry = zone.schedule?.find(s => s.day === todayName);
+
+        if (!scheduleEntry) {
+            return res.json({
+                success: true,
+                todayScheduled: false,
+                status: 'no-pickup',
+                types: [],
+                driver: null,
+                vehicle: null,
+                eta: null
+            });
+        }
+
+        // Find active task for this zone today
+        const startOfDay = new Date(today);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(today);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const task = await Task.findOne({
+            zoneId: zone._id,
+            createdAt: { $gte: startOfDay, $lte: endOfDay },
+            status: { $in: ['Pending', 'Accepted', 'In Progress', 'Completed'] }
+        })
+            .populate('assignedTo', 'name avatar phone')
+            .populate('vehicleId', 'vehicleId type licensePlate')
+            .sort({ updatedAt: -1 });
+
+        let status = 'scheduled'; // default: pickup exists in template but no task yet
+        let driver = null;
+        let vehicle = null;
+        let eta = scheduleEntry.startTime;
+        let startedAt = null;
+        let completedAt = null;
+
+        if (task) {
+            driver = task.assignedTo;
+            vehicle = task.vehicleId;
+
+            if (task.status === 'In Progress') {
+                status = 'driver-en-route';
+                startedAt = task.startedAt;
+            } else if (task.status === 'Completed') {
+                status = 'completed';
+                completedAt = task.completedAt;
+            } else if (task.status === 'Accepted') {
+                status = 'dispatched';
+            } else {
+                status = 'scheduled';
+            }
+        }
+
+        // Check if delayed: past endTime and not completed
+        const [endH, endM] = (scheduleEntry.endTime || '16:00').split(':').map(Number);
+        const endTimeToday = new Date(today);
+        endTimeToday.setHours(endH, endM, 0, 0);
+        if (today > endTimeToday && status !== 'completed') {
+            status = 'delayed';
+        }
+
+        return res.json({
+            success: true,
+            todayScheduled: true,
+            status,
+            types: scheduleEntry.types,
+            scheduledTime: `${scheduleEntry.startTime} - ${scheduleEntry.endTime}`,
+            driver,
+            vehicle,
+            eta,
+            startedAt,
+            completedAt
+        });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+module.exports = { getZones, getMyZone, getZoneById, createZone, updateZone, addAreaToZone, updateZoneSchedule, getZoneScheduleStatus };

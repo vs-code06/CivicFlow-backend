@@ -29,6 +29,8 @@ app.use('/api/zones', require('./src/routes/zoneRoutes'));
 app.use('/api/complaints', require('./src/routes/complaintRoutes'));
 app.use('/api/leaves', require('./src/routes/leaveRoutes'));
 app.use('/api/dashboard', require('./src/routes/dashboardRoutes'));
+app.use('/api/analytics', require('./src/routes/analyticsRoutes'));
+app.use('/api/chat', require('./src/routes/chatRoutes'));
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/', (req, res) => res.json({ success: true, message: 'CivicFlow API is running', version: '2.0.0' }));
@@ -60,5 +62,7 @@ app.listen(PORT, () => {
     console.log(`   → Zones:      /api/zones`);
     console.log(`   → Complaints: /api/complaints`);
     console.log(`   → Leaves:     /api/leaves`);
-    console.log(`   → Dashboard:  /api/dashboard\n`);
+    console.log(`   → Dashboard:  /api/dashboard`);
+    console.log(`   → Analytics:  /api/analytics`);
+    console.log(`   → Chat:       /api/chat\n`);
 });

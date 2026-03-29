@@ -242,7 +242,8 @@ const forgotPassword = async (req, res) => {
         user.resetPasswordToken = crypto_1.default.createHash('sha256').update(resetToken).digest('hex');
         user.resetPasswordExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
         await user.save();
-        const resetUrl = `${req.protocol}://${req.get('host') === 'localhost:8080' ? 'localhost:3000' : req.get('host')}/reset-password?token=${resetToken}`;
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+        const resetUrl = `${clientUrl}/reset-password?token=${resetToken}`;
         const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please click the link below to reset your password:\n\n${resetUrl}`;
         try {
             await (0, sendEmail_1.default)({

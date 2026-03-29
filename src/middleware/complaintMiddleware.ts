@@ -7,7 +7,7 @@ export interface ComplaintRequest extends Request {
 
 export const checkComplaintExists = async (req: ComplaintRequest, res: Response, next: NextFunction) => {
     try {
-        const complaint = await Complaint.findById(req.params.id)
+        const complaint = await Complaint.findById((req as any).params.id)
             .populate('residentId', 'name email phone avatar')
             .populate('assignedTo', 'name email');
 

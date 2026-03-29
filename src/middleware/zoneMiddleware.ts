@@ -7,7 +7,7 @@ export interface ZoneRequest extends Request {
 
 export const checkZoneExists = async (req: ZoneRequest, res: Response, next: NextFunction) => {
     try {
-        const zone = await Zone.findById(req.params.id);
+        const zone = await Zone.findById((req as any).params.id);
         if (!zone) {
             return res.status(404).json({ message: 'Zone not found' });
         }

@@ -12,7 +12,7 @@ const chatWithAI = async (req, res) => {
         return res.status(400).json({ message: 'Please provide a message' });
     }
     try {
-        const response = await fetch('http://localhost:8000/api/chat', {
+        const response = await fetch(`${process.env.AI_SERVICE_URL}/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -46,7 +46,7 @@ const chatWithAIStream = async (req, res) => {
         return res.status(400).json({ message: 'Please provide a message' });
     }
     try {
-        const response = await fetch('http://localhost:8000/api/chat/stream', {
+        const response = await fetch(`${process.env.AI_SERVICE_URL}/chat/stream`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

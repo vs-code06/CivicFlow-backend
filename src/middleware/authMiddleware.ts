@@ -8,7 +8,12 @@ export interface AuthRequest extends Request {
 
 export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-        const token = req.cookies.token;
+        let token = req.cookies.token;
+
+        // Check Authorization header fallback
+        if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1];
+        }
 
         if (!token) {
             return res.status(401).json({ message: 'Unauthenticated' });

@@ -31,6 +31,7 @@ export const register = async (req: Request, res: Response) => {
 
         return res.status(201).json({
             success: true,
+            token,
             user: { _id: user._id, name: user.name, email: user.email, role: user.role }
         });
     } catch (err: any) {
@@ -228,7 +229,18 @@ export const googleLogin = async (req: Request, res: Response) => {
 
         return res.json({
             success: true,
-            user: { _id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar }
+            token,
+            user: { 
+                _id: user._id, 
+                name: user.name, 
+                email: user.email, 
+                role: user.role, 
+                avatar: user.avatar,
+                status: (user as any).status,
+                zoneId: (user as any).zoneId,
+                address: (user as any).address,
+                assignedVehicle: (user as any).assignedVehicle
+            }
         });
     } catch (err: any) {
         return res.status(500).json({ success: false, message: err.message });

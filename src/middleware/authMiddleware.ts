@@ -10,8 +10,8 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     try {
         let token = req.cookies.token;
 
-        // Check Authorization header fallback
-        if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        // Prioritize Authorization header for cross-domain requests
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
             token = req.headers.authorization.split(' ')[1];
         }
 
